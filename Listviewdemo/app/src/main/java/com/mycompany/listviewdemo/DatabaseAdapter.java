@@ -15,25 +15,44 @@ package com.mycompany.listviewdemo;
 public class DatabaseAdapter {
     private static final String TAG = "DBAdapter";
 
-    // DB Fields
-    public static final String KEY_ROWID = "subject_id";
-    public static final int COL_ROWID = 0;
-    /*
-     * CHANGE 1:
-     */
-    // TODO: Setup your fields here:
-    public static final String KEY_NAME = "name";
+    // Subjects Fields
+    public static final String SUBJ_ID = "_id";
+    public static final String SUBJ_NAME = "name";
+    // Questions Fields
+    public static final String QUEST_ID = "_id";
+    public static final String QUEST_TEXT = "q_text";
+    public static final String QUEST_SUBJ_ID = "subj_id";
+    public static final String QUEST_SERNO = "ser_num";
+    // Questions Answers
+    public static final String ANSW_ID = "_id";
+    public static final String ANSW_TEXT = "a_text";
+    public static final String ANSW_QUEST_ID = "quest_id";
+    public static final String ANSW_IS_CORRECT = "is_correct";
 
     // TODO: Setup your field numbers here (0 = KEY_ROWID, 1=...)
-    public static final int COL_NAME = 1;
 
-    public static final String[] ALL_KEYS = new String[] {KEY_ROWID, KEY_NAME};
+    public static final String[] SUBJ_COLUMNS = new String[] {SUBJ_ID, SUBJ_NAME};
+    //public static final String[] QUEST_COLUMNS = new String[] {QUEST_ID, QUEST_TEXT, QUEST_SUBJ_ID,QUEST_SERNO};
+    //public static final String[] ANSW_COLUMNS = new String[] {ANSW_ID, ANSW_TEXT, ANSW_QUEST_ID, ANSW_IS_CORRECT};
 
     public static final String DATABASE_NAME = "MyDb";
-    public static final String DATABASE_TABLE = "Subjects";
-    public static final int DATABASE_VERSION = 1;
-    private static final String DATABASE_CREATE_SQL =
-            "create table " + DATABASE_TABLE + "(" + KEY_ROWID + " integer  primary key autoincrement, " + KEY_NAME + " text not null);";
+    public static final String TAB_SUBJS = "Subjects";
+    public static final String TAB_QUESTIONS = "Questions";
+    public static final String TAB_ANSWERS = "Answers";
+
+    public static final int DATABASE_VERSION = 7;
+
+    private static final String CREATE_SUBJS_SQL =
+            String.format("create table %s (%s integer  primary key autoincrement, %s text not null);", TAB_SUBJS, SUBJ_ID, SUBJ_NAME);
+    private static final String CREATE_QUESTS_SQL =
+            String.format("create table %s (%s integer primary key autoincrement, %s text not null, %s int not null, %s int not null, UNIQUE (%s, %s) ON CONFLICT REPLACE, FOREIGN KEY(%s) REFERENCES %s(%s));",
+                    TAB_QUESTIONS, QUEST_ID, QUEST_TEXT, QUEST_SUBJ_ID, QUEST_SERNO,QUEST_SUBJ_ID, QUEST_SERNO,QUEST_SUBJ_ID, TAB_SUBJS, SUBJ_ID);
+    private static final String CREATE_ANSWERS_SQL =
+            String.format("create table %s(%s integer primary key autoincrement, %s int not null,%s text not null, %s int not null, FOREIGN KEY(%s) REFERENCES %s(%s));",
+                    TAB_ANSWERS, ANSW_ID, ANSW_TEXT, ANSW_QUEST_ID, ANSW_IS_CORRECT, ANSW_QUEST_ID,TAB_QUESTIONS,QUEST_ID);
+    private static final String get_quest_query = String.format("select %s,%s from %s where %s = ? and %s = ?", QUEST_TEXT, QUEST_ID,TAB_QUESTIONS, QUEST_SUBJ_ID, QUEST_SERNO);
+    private static final String get_answers_query = String.format("select %s, %s from %s where %s = ?", ANSW_TEXT,ANSW_IS_CORRECT, TAB_ANSWERS, ANSW_QUEST_ID);
+    private static final String get_count_quests_query = String.format("select count(*) from %s where %s = ?", TAB_QUESTIONS, QUEST_SUBJ_ID);
     private final Context context;
     private DatabaseHelper myDBHelper;
     private SQLiteDatabase db;
@@ -62,57 +81,94 @@ public class DatabaseAdapter {
         Log.v("MainActivity", "myDBHelper.close()");
     }
 
-    // Return all data in the database.
-    public Cursor getAllRows() {
+    public Cursor getAllRowsSubjects() {
         String where = null;
-        Cursor c = 	db.query(true, DATABASE_TABLE, ALL_KEYS,
+        Cursor c = 	db.query(true, TAB_SUBJS, SUBJ_COLUMNS,
                 where, null, null, null, null, null);
         if (c != null) {
             c.moveToFirst();
         }
         return c;
     }
+    public QuestionWithAnswer getQuestionBySN(int subject_id, int serno){
 
-    public Cursor getRow(long rowId) {
-        String where = KEY_ROWID + "=" + rowId;
-        Cursor c = 	db.query(true, DATABASE_TABLE, ALL_KEYS,
-                where, null, null, null, null, null);
-        if (c != null) {
-            c.moveToFirst();
+        Cursor q_cursor;
+        String question_text = "";
+        String question_id = "";
+        String[] question_answers = new String[QuestionWithAnswer.AnswersCount];
+        int correct_answer_sn = -1;
+        int is_answer_correct;
+        q_cursor = db.rawQuery(get_quest_query, new String[] {String.valueOf(subject_id), String.valueOf(serno)});
+
+        try {
+            if (q_cursor.getCount() > 0) {
+                q_cursor.moveToFirst();
+                question_text = q_cursor.getString(q_cursor.getColumnIndex(QUEST_TEXT));
+                question_id = q_cursor.getString(q_cursor.getColumnIndex(QUEST_ID));
+            }
         }
-        return c;
-    }
+        finally{
+            q_cursor.close();
+        }
 
-    public boolean deleteRow(long rowId) {
-        String where = KEY_ROWID + "=" + rowId;
-        return db.delete(DATABASE_TABLE, where, null) != 0;
-    }
+        q_cursor = db.rawQuery(get_answers_query, new String[] {question_id});
 
-    public void deleteAll() {
-        Cursor c = getAllRows();
-        long rowId = c.getColumnIndexOrThrow(KEY_ROWID);
-        if (c.moveToFirst()) {
+        if (q_cursor.moveToFirst()) {
+            int i = 0;
             do {
-                deleteRow(c.getLong((int) rowId));
-            } while (c.moveToNext());
+                question_answers[i] = q_cursor.getString(q_cursor.getColumnIndex(ANSW_TEXT));
+                is_answer_correct = q_cursor.getInt(q_cursor.getColumnIndex(ANSW_IS_CORRECT));
+                if (is_answer_correct == 1){
+                    correct_answer_sn = i;
+                }
+                i++;
+            } while (q_cursor.moveToNext());
         }
-        c.close();
+
+        q_cursor.close();
+
+        QuestionWithAnswer quest_with_answer = new QuestionWithAnswer(question_text, question_answers, correct_answer_sn);
+        return quest_with_answer;
     }
 
-    public long insertRow(String name) {
-		/*
-		 * CHANGE 3:
-		 */
-        // TODO: Update data in the row with new fields.
-        // TODO: Also change the function's arguments to be what you need!
-        // Create row's data:
+    public int getCountQuestionsInSubject(long subject_id){
+        Cursor cursor_cnt;
+        int QuestCount;
+        cursor_cnt = db.rawQuery(get_count_quests_query, new String[] {String.valueOf(subject_id)});
+        cursor_cnt.moveToFirst();
+        QuestCount = cursor_cnt.getInt(0);
+        cursor_cnt.close();
+        return QuestCount;
+    }
+
+    public long insertSubject(String name) {
         ContentValues initialValues = new ContentValues();
-        initialValues.put(KEY_NAME, name);
+        initialValues.put(SUBJ_NAME, name);
         // Insert it into the database.
-        return db.insert(DATABASE_TABLE, null, initialValues);
+        return db.insert(TAB_SUBJS, null, initialValues);
     }
 
+    public long insertQuestion(String text, long subject_id, int serno) {
+        ContentValues initialValues = new ContentValues();
+        initialValues.put(QUEST_TEXT, text);
+        initialValues.put(QUEST_SUBJ_ID, subject_id);
+        initialValues.put(QUEST_SERNO, serno);
+        return db.insert(TAB_QUESTIONS, null, initialValues);
+    }
 
+    public void insertAnswer(long question_id, String text, int is_correct){
+        ContentValues initialValues = new ContentValues();
+        initialValues.put(ANSW_QUEST_ID, question_id);
+        initialValues.put(ANSW_TEXT, text);
+        initialValues.put(ANSW_IS_CORRECT, is_correct);
+        db.insert(TAB_ANSWERS, null, initialValues);
+    }
+
+    void deleteAllData(){
+        db.delete(TAB_ANSWERS, null, null);
+        db.delete(TAB_QUESTIONS, null, null);
+        db.delete(TAB_SUBJS, null, null);
+    }
     /////////////////////////////////////////////////////////////////////
     //	Private Helper Classes:
     /////////////////////////////////////////////////////////////////////
@@ -130,8 +186,11 @@ public class DatabaseAdapter {
         @Override
         public void onCreate(SQLiteDatabase _db) {
             Log.v("MainActivity", "OnCreate helper");
-            _db.execSQL(DATABASE_CREATE_SQL);
-            //_db.execSQL("insert into Subjects('name') values ('Biology')");
+            _db.execSQL(CREATE_SUBJS_SQL);
+            Log.v("MainActivity", "subjs created");
+            _db.execSQL(CREATE_QUESTS_SQL);
+            Log.v("MainActivity", "quests created");
+            _db.execSQL(CREATE_ANSWERS_SQL);
             Log.v("MainActivity", "OnCreate helper finished");
         }
 
@@ -141,8 +200,9 @@ public class DatabaseAdapter {
                     + " to " + newVersion + ", which will destroy all old data!");
 
             // Destroy old database:
-            _db.execSQL("DROP TABLE IF EXISTS " + DATABASE_TABLE);
-
+            _db.execSQL("DROP TABLE IF EXISTS " + TAB_SUBJS);
+            _db.execSQL("DROP TABLE IF EXISTS " + TAB_QUESTIONS);
+            _db.execSQL("DROP TABLE IF EXISTS " + TAB_ANSWERS);
             // Recreate new database:
             onCreate(_db);
         }

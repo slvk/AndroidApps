@@ -1,6 +1,7 @@
 <resources>
-    <string name="app_name">Listviewdemo</string>
+    <string name="app_name">Програма тестування "Крок"</string>
 
     <string name="hello_world">Hello world!</string>
-    <string name="action_settings">Settings</string>
+    <string name="action_settings">Налаштування</string>
+    <string name="title_activity_question">Програма тестування "Крок"</string>
 </resources>
