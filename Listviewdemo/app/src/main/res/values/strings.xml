@@ -1,7 +1,7 @@
 <resources>
-    <string name="app_name">Програма тестування "Крок"</string>
-
-    <string name="hello_world">Hello world!</string>
+    <string name="app_name">Тести Крок</string>
     <string name="action_settings">Налаштування</string>
-    <string name="title_activity_question">Програма тестування "Крок"</string>
+    <string name="title_activity_question">Тести  &#34;Крок&#34;</string>
+    <string name="title_activity_statistics">StatisticsActivity</string>
+    <string name="minute_label">&#160;хв</string>
 </resources>

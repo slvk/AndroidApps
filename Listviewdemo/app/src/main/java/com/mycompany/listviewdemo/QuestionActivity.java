@@ -1,13 +1,15 @@
 package com.mycompany.listviewdemo;
 
 import android.content.Intent;
-import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.ListAdapter;
+import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -22,25 +24,67 @@ public class QuestionActivity extends ActionBarActivity {
     ArrayList<Integer> QuestionList;
     final int END_LIST_INDICATOR = -1;
     Random QuestNumberGenerator = new Random();
-
+    int questions_subj_id;
+    private QuestionWithAnswer quest;
+    private String questions_subj;
+    private int QuestionsCount;
+    private int CorrectAnswersCount = 0;
+    private long StartTime;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_question);
         Intent intent = getIntent();
-        String questions_subj = intent.getStringExtra("subj");
 
-        int questions_subj_id = intent.getIntExtra("subj_id", 0);
+        questions_subj = intent.getStringExtra("subj");
+
+        questions_subj_id = intent.getIntExtra("subj_id", 0);
+        StartTime = System.nanoTime();
+
         getSupportActionBar().setTitle(questions_subj);
         openDB();
 
-        Log.v(TAG, "Before init");
+        //Log.v(TAG, "Before init");
         InitQuestionsList(questions_subj_id);
 
         displayNextQuestion(questions_subj_id);
-        //header.setText(String.valueOf(CountQuestionsInSubject));
-        //myDb.
-        closeDB();
+
+        final Button button = (Button) findViewById(R.id.nextbutton);
+        button.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                displayNextQuestion(questions_subj_id);
+            }
+        });
+
+        ListView AnswLV = (ListView) findViewById(R.id.listViewAnswers);
+
+        AnswLV.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, final View view,
+                                    int position, long id) {
+                Button NextQuestButton = (Button) findViewById(R.id.nextbutton);
+                if (!NextQuestButton.isEnabled()) {
+                    NextQuestButton.setEnabled(true);
+
+                    TextView textViewAnsw = (TextView) view.findViewById(android.R.id.text1);
+                    int highlight_color;
+                    if (quest.Correctness[position]) {
+                        highlight_color = android.R.color.holo_green_light; // correct answer
+                        CorrectAnswersCount++;
+                    }
+                    else {
+                        highlight_color = android.R.color.holo_red_light; // incorrect answer
+                        int CorrectAnswerPosition = quest.getCorrectAnswerPosition();
+
+                        TextView textViewCorrectAnsw = (TextView) parent.getChildAt(CorrectAnswerPosition).findViewById(android.R.id.text1);
+                        textViewCorrectAnsw.setBackgroundColor(getResources().getColor(android.R.color.holo_green_light));
+                    }
+                    textViewAnsw.setBackgroundColor(getResources().getColor(highlight_color));
+                }
+            }
+
+        });
+
     }
 
 
@@ -56,7 +100,8 @@ public class QuestionActivity extends ActionBarActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
+        // as you specify a parent
+        // activity in AndroidManifest.xml.
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
@@ -77,33 +122,38 @@ public class QuestionActivity extends ActionBarActivity {
     }
 
     private void displayNextQuestion(int subject_id){
+        Button NextQuestButton = (Button) findViewById(R.id.nextbutton);
+        NextQuestButton.setEnabled(false);
         int NextQuestionSN = GetRandomQuestionNumber();
         TextView QuestTV = (TextView) findViewById(R.id.question);
         ListView AnswLV = (ListView) findViewById(R.id.listViewAnswers);
         if (NextQuestionSN == END_LIST_INDICATOR) {
-            //todo start new activity that shows answers statistic
-            QuestTV.setText("");
+            Intent quest_activity_intent = new Intent(QuestionActivity.this, StatisticsActivity.class);
+            quest_activity_intent.putExtra("subj", questions_subj);
+            quest_activity_intent.putExtra("QuestionsCount", QuestionsCount);
+            quest_activity_intent.putExtra("CorrectAnswersCount", CorrectAnswersCount);
+            quest_activity_intent.putExtra("TimeElapsed", System.nanoTime()- StartTime);
+            closeDB();
+            this.startActivity(quest_activity_intent);
+
         } else {
-            //Log.v(TAG, "NextQuestionSN " + NextQuestionSN);
-            QuestionWithAnswer quest = myDb.getQuestionBySN(subject_id, NextQuestionSN);
+            Log.v(TAG, "subject_id = " + subject_id);
+            Log.v(TAG, "NextQuestionSN = " + NextQuestionSN);
+
+            quest = myDb.getQuestionBySN(subject_id, NextQuestionSN);
             QuestTV.setText(quest.Question);
+            Log.v(TAG, "quest.Answers.length = " + quest.Answers.length);
+
             ArrayAdapter<String> AnswersLA =
                 new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, quest.Answers);
             AnswLV.setAdapter(AnswersLA);
-
-            //Log.v(TAG, quest.Question);
-            //for (String str : quest.Answers)
-            //    if (str != null) Log.v(TAG, str);
-/*            Log.v(TAG, quest.Answers[0]);
-            Log.v(TAG, quest.Answers[1]);
-            Log.v(TAG, quest.Answers[2]);
-            Log.v(TAG, quest.Answers[3]); */
+            //Log.v(TAG, "Adapter set correctly");
         }
     }
 
     private void InitQuestionsList(int SubjId){
         Log.v(TAG, "inside method SubjId = "+SubjId);
-        int QuestionsCount = myDb.getCountQuestionsInSubject(SubjId);
+        QuestionsCount = myDb.getCountQuestionsInSubject(SubjId);
         Log.v(TAG, "QuestionsCount = "+QuestionsCount);
         QuestionList = new ArrayList<Integer>(QuestionsCount);
 
@@ -115,12 +165,17 @@ public class QuestionActivity extends ActionBarActivity {
 
     public int GetRandomQuestionNumber(){
         int QuestSerno;
+
+        Log.v(TAG, "QuestionList.size = " + QuestionList.size());
         if (QuestionList.size() == 0)
             QuestSerno = END_LIST_INDICATOR;
         else{
             int QuestIndex = QuestNumberGenerator.nextInt(QuestionList.size());
+            Log.v(TAG, "index generated = " + QuestIndex);
             QuestSerno = QuestionList.get(QuestIndex);
+            Log.v(TAG, "QuestSerno = " + QuestSerno);
             QuestionList.remove(QuestIndex);
+            Log.v(TAG, "Serno removed from list");
             ++QuestSerno; // add 1 because in DB generation starts from 1
         }
         return QuestSerno;

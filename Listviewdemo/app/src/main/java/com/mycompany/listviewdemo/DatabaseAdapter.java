@@ -68,17 +68,17 @@ public class DatabaseAdapter {
 
     // Open the database connection.
     public DatabaseAdapter open() {
-        //db = myDBHelper.getWritableDatabase();
-        db = myDBHelper.getReadableDatabase();
+        db = myDBHelper.getWritableDatabase();
+        //db = myDBHelper.getReadableDatabase();
         String name = myDBHelper.getDatabaseName();
-        Log.v("MainActivity", "getWritableDatabase() "+name);
+        Log.v(TAG, "getWritableDatabase() "+name);
         return this;
     }
 
     // Close the database connection.
     public void close() {
         myDBHelper.close();
-        Log.v("MainActivity", "myDBHelper.close()");
+        Log.v(TAG, "myDBHelper.close()");
     }
 
     public Cursor getAllRowsSubjects() {
@@ -96,8 +96,8 @@ public class DatabaseAdapter {
         String question_text = "";
         String question_id = "";
         String[] question_answers = new String[QuestionWithAnswer.AnswersCount];
-        int correct_answer_sn = -1;
-        int is_answer_correct;
+        boolean[] answer_correctness = new boolean[QuestionWithAnswer.AnswersCount];
+
         q_cursor = db.rawQuery(get_quest_query, new String[] {String.valueOf(subject_id), String.valueOf(serno)});
 
         try {
@@ -117,17 +117,14 @@ public class DatabaseAdapter {
             int i = 0;
             do {
                 question_answers[i] = q_cursor.getString(q_cursor.getColumnIndex(ANSW_TEXT));
-                is_answer_correct = q_cursor.getInt(q_cursor.getColumnIndex(ANSW_IS_CORRECT));
-                if (is_answer_correct == 1){
-                    correct_answer_sn = i;
-                }
+                answer_correctness[i] = (q_cursor.getInt(q_cursor.getColumnIndex(ANSW_IS_CORRECT)) == 1);
                 i++;
             } while (q_cursor.moveToNext());
         }
 
         q_cursor.close();
 
-        QuestionWithAnswer quest_with_answer = new QuestionWithAnswer(question_text, question_answers, correct_answer_sn);
+        QuestionWithAnswer quest_with_answer = new QuestionWithAnswer(question_text, question_answers, answer_correctness);
         return quest_with_answer;
     }
 
@@ -185,13 +182,13 @@ public class DatabaseAdapter {
 
         @Override
         public void onCreate(SQLiteDatabase _db) {
-            Log.v("MainActivity", "OnCreate helper");
+            Log.v(TAG, "OnCreate helper");
             _db.execSQL(CREATE_SUBJS_SQL);
-            Log.v("MainActivity", "subjs created");
+            Log.v(TAG, "subjs created");
             _db.execSQL(CREATE_QUESTS_SQL);
-            Log.v("MainActivity", "quests created");
+            Log.v(TAG, "quests created");
             _db.execSQL(CREATE_ANSWERS_SQL);
-            Log.v("MainActivity", "OnCreate helper finished");
+            Log.v(TAG, "OnCreate helper finished");
         }
 
         @Override

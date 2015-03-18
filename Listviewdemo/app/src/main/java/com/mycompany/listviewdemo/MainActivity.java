@@ -1,27 +1,16 @@
 package com.mycompany.listviewdemo;
 
-import android.app.ActionBar;
-import android.app.Activity;
-import android.app.ListActivity;
 import android.content.Intent;
 import android.database.Cursor;
-
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
-import android.view.Display;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.ListView;
-import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
-import android.widget.Toast;
-import android.util.Log;
-
-import java.util.ArrayList;
-import java.util.Random;
 
 public class MainActivity extends ActionBarActivity {
 
@@ -111,6 +100,7 @@ public class MainActivity extends ActionBarActivity {
         myDb.insertAnswer(QuestId,"Безумовнi парасимпатичнi рефлекси",0);
         myDb.insertAnswer(QuestId,"Умовнi симпатичнi рефлекси",0);
         myDb.insertAnswer(QuestId,"Умовнi парасимпатичнi рефлекси",0);
+        myDb.insertAnswer(QuestId,"-",0); // todo: find way to handle 4-answer questions
 
         SubjId = myDb.insertSubject("Хірургія");
         QuestId = myDb.insertQuestion(
@@ -149,7 +139,7 @@ public class MainActivity extends ActionBarActivity {
              SubjId, 2);
         myDb.insertAnswer(QuestId,"Цукрово-пептонний бульйон",1);
         myDb.insertAnswer(QuestId,"М’ясо-пептонний агар",0);
-        myDb.insertAnswer(QuestId,"Середовище Плоскiрьова",1);
+        myDb.insertAnswer(QuestId,"Середовище Плоскiрьова",0);
         myDb.insertAnswer(QuestId,"Середовище Бучiна",0);
         myDb.insertAnswer(QuestId,"Жовчно-сольовий агар",0);
 
