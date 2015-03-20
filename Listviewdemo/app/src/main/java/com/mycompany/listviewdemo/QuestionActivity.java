@@ -1,5 +1,6 @@
 package com.mycompany.listviewdemo;
 
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
@@ -11,6 +12,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import java.util.ArrayList;
@@ -30,6 +32,7 @@ public class QuestionActivity extends ActionBarActivity {
     private int QuestionsCount;
     private int CorrectAnswersCount = 0;
     private long StartTime;
+    private ProgressBar pbAnswerProgress;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -58,6 +61,8 @@ public class QuestionActivity extends ActionBarActivity {
 
         ListView AnswLV = (ListView) findViewById(R.id.listViewAnswers);
 
+
+
         AnswLV.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, final View view,
@@ -80,6 +85,8 @@ public class QuestionActivity extends ActionBarActivity {
                         textViewCorrectAnsw.setBackgroundColor(getResources().getColor(android.R.color.holo_green_light));
                     }
                     textViewAnsw.setBackgroundColor(getResources().getColor(highlight_color));
+                    //todo
+                    pbAnswerProgress.setProgress(QuestionsCount - QuestionList.size());
                 }
             }
 
@@ -92,7 +99,7 @@ public class QuestionActivity extends ActionBarActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_question, menu);
+        getMenuInflater().inflate(R.menu.menu_main, menu);
         return true;
     }
 
@@ -105,9 +112,22 @@ public class QuestionActivity extends ActionBarActivity {
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
+        if (id == R.id.action_about) {
+            View messageView = getLayoutInflater().inflate(R.layout.about_window, null, false);
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle(R.string.app_name);
+            builder.setView(messageView);
+            builder.create();
+            builder.show();
             return true;
         }
+        else if (id ==R.id.action_exit){
+            Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            intent.putExtra("EXIT", true);
+            startActivity(intent);
+        }
+
 
         return super.onOptionsItemSelected(item);
     }
@@ -124,6 +144,8 @@ public class QuestionActivity extends ActionBarActivity {
     private void displayNextQuestion(int subject_id){
         Button NextQuestButton = (Button) findViewById(R.id.nextbutton);
         NextQuestButton.setEnabled(false);
+        if(QuestionList.size() == 1)
+            NextQuestButton.setText(R.string.statistics_label);
         int NextQuestionSN = GetRandomQuestionNumber();
         TextView QuestTV = (TextView) findViewById(R.id.question);
         ListView AnswLV = (ListView) findViewById(R.id.listViewAnswers);
@@ -154,6 +176,9 @@ public class QuestionActivity extends ActionBarActivity {
     private void InitQuestionsList(int SubjId){
         Log.v(TAG, "inside method SubjId = "+SubjId);
         QuestionsCount = myDb.getCountQuestionsInSubject(SubjId);
+        //todo
+        pbAnswerProgress = (ProgressBar) findViewById(R.id.AnswerProgress);
+        pbAnswerProgress.setMax(QuestionsCount);
         Log.v(TAG, "QuestionsCount = "+QuestionsCount);
         QuestionList = new ArrayList<Integer>(QuestionsCount);
 

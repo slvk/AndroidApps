@@ -27,9 +27,20 @@
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Наступне питання"
+        android:text="@string/next_quest_label"
         android:id="@+id/nextbutton"
         android:layout_alignParentBottom="true"
         android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true" />
+
+    <ProgressBar
+
+        style="@android:style/Widget.ProgressBar.Horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:id="@+id/AnswerProgress"
+        android:layout_alignBottom="@+id/nextbutton"
+        android:layout_toLeftOf="@+id/nextbutton"
+        android:layout_toStartOf="@+id/nextbutton" />
+
 </RelativeLayout>

@@ -6,7 +6,6 @@ import java.util.Random;
  * Created by VIanoshchuk on 11.03.2015.
  */
 public class QuestionWithAnswer {
-    public static final int AnswersCount = 5;
     public String Question;
     public String[] Answers;
     public boolean[] Correctness;

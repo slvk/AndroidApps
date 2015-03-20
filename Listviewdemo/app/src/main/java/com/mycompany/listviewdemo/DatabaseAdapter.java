@@ -95,8 +95,6 @@ public class DatabaseAdapter {
         Cursor q_cursor;
         String question_text = "";
         String question_id = "";
-        String[] question_answers = new String[QuestionWithAnswer.AnswersCount];
-        boolean[] answer_correctness = new boolean[QuestionWithAnswer.AnswersCount];
 
         q_cursor = db.rawQuery(get_quest_query, new String[] {String.valueOf(subject_id), String.valueOf(serno)});
 
@@ -112,6 +110,8 @@ public class DatabaseAdapter {
         }
 
         q_cursor = db.rawQuery(get_answers_query, new String[] {question_id});
+        String[] question_answers = new String[q_cursor.getCount()];
+        boolean[] answer_correctness = new boolean[q_cursor.getCount()];
 
         if (q_cursor.moveToFirst()) {
             int i = 0;
