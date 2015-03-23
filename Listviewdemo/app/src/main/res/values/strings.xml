@@ -5,7 +5,7 @@
     <string name="title_activity_statistics">StatisticsActivity</string>
     <string name="minute_label">&#160;хв</string>
     <string name= "statistics_label">Статисткика </string>
-    <string name="next_quest_label">Наступне питання</string>
+    <string name="next_quest_label">Далі</string>
     <string name="about_title">Про програму</string>
     <string name="version_title">Версія: 0.8.1 </string>
     <string name="author">Автор: Янощук В\'ячеслав </string>

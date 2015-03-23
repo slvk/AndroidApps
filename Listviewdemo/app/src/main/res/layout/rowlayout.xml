@@ -11,25 +11,23 @@
         android:layout_marginLeft="4px"
         android:layout_marginRight="10px"
         android:layout_marginTop="20dp"
-        android:src="@drawable/ic_ok" >
+        android:src="@mipmap/ic_d_m">
     </ImageView>
 
     <TextView
         android:id="@+id/serNo"
         android:layout_width="3px"
         android:layout_height="1px"
-
+        android:visibility="invisible"
         android:text="12"
         android:textSize="26sp"
-        android:padding="30dp"
-        android:visibility="invisible"
         />
 
     <TextView
         android:id="@+id/name"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-
+        android:layout_gravity="center"
         android:text="Subject name"
         android:textSize="26sp"
         android:padding="30dp">

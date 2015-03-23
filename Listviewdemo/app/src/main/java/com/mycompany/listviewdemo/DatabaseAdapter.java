@@ -40,7 +40,7 @@ public class DatabaseAdapter {
     public static final String TAB_QUESTIONS = "Questions";
     public static final String TAB_ANSWERS = "Answers";
 
-    public static final int DATABASE_VERSION = 7;
+    public static final int DATABASE_VERSION = 12;
 
     private static final String CREATE_SUBJS_SQL =
             String.format("create table %s (%s integer  primary key autoincrement, %s text not null);", TAB_SUBJS, SUBJ_ID, SUBJ_NAME);
@@ -138,34 +138,6 @@ public class DatabaseAdapter {
         return QuestCount;
     }
 
-    public long insertSubject(String name) {
-        ContentValues initialValues = new ContentValues();
-        initialValues.put(SUBJ_NAME, name);
-        // Insert it into the database.
-        return db.insert(TAB_SUBJS, null, initialValues);
-    }
-
-    public long insertQuestion(String text, long subject_id, int serno) {
-        ContentValues initialValues = new ContentValues();
-        initialValues.put(QUEST_TEXT, text);
-        initialValues.put(QUEST_SUBJ_ID, subject_id);
-        initialValues.put(QUEST_SERNO, serno);
-        return db.insert(TAB_QUESTIONS, null, initialValues);
-    }
-
-    public void insertAnswer(long question_id, String text, int is_correct){
-        ContentValues initialValues = new ContentValues();
-        initialValues.put(ANSW_QUEST_ID, question_id);
-        initialValues.put(ANSW_TEXT, text);
-        initialValues.put(ANSW_IS_CORRECT, is_correct);
-        db.insert(TAB_ANSWERS, null, initialValues);
-    }
-
-    void deleteAllData(){
-        db.delete(TAB_ANSWERS, null, null);
-        db.delete(TAB_QUESTIONS, null, null);
-        db.delete(TAB_SUBJS, null, null);
-    }
     /////////////////////////////////////////////////////////////////////
     //	Private Helper Classes:
     /////////////////////////////////////////////////////////////////////
@@ -174,7 +146,7 @@ public class DatabaseAdapter {
      * Private class which handles database creation and upgrading.
      * Used to handle low-level database access.
      */
-    private static class DatabaseHelper extends SQLiteOpenHelper
+   /* private */public static class DatabaseHelper extends SQLiteOpenHelper
     {
         DatabaseHelper(Context context) {
             super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -189,6 +161,8 @@ public class DatabaseAdapter {
             Log.v(TAG, "quests created");
             _db.execSQL(CREATE_ANSWERS_SQL);
             Log.v(TAG, "OnCreate helper finished");
+
+            DataLoader.LoadData(_db);
         }
 
         @Override
@@ -203,5 +177,35 @@ public class DatabaseAdapter {
             // Recreate new database:
             onCreate(_db);
         }
+
+        public static void deleteAllData(SQLiteDatabase _db){
+            _db.delete(TAB_ANSWERS, null, null);
+            _db.delete(TAB_QUESTIONS, null, null);
+            _db.delete(TAB_SUBJS, null, null);
+        }
+        public static long insertSubject(SQLiteDatabase _db, String name) {
+            ContentValues initialValues = new ContentValues();
+            initialValues.put(SUBJ_NAME, name);
+            // Insert it into the database.
+            return _db.insert(TAB_SUBJS, null, initialValues);
+        }
+
+        public static long insertQuestion(SQLiteDatabase _db,String text, long subject_id, int serno) {
+            ContentValues initialValues = new ContentValues();
+            initialValues.put(QUEST_TEXT, text);
+            initialValues.put(QUEST_SUBJ_ID, subject_id);
+            initialValues.put(QUEST_SERNO, serno);
+            return _db.insert(TAB_QUESTIONS, null, initialValues);
+        }
+
+        public static void insertAnswer(SQLiteDatabase _db,long question_id, String text, int is_correct){
+            ContentValues initialValues = new ContentValues();
+            initialValues.put(ANSW_QUEST_ID, question_id);
+            initialValues.put(ANSW_TEXT, text);
+            initialValues.put(ANSW_IS_CORRECT, is_correct);
+            _db.insert(TAB_ANSWERS, null, initialValues);
+        }
+
+
     }
 }

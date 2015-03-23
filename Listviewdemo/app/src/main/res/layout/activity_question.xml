@@ -10,7 +10,7 @@
         android:layout_width="wrap_content"
         android:id="@+id/question"
         android:layout_height="wrap_content"
-        android:textSize="16sp"
+        android:textSize="25sp"
         android:padding="10dp"/>
 
     <ListView
@@ -18,29 +18,36 @@
         android:layout_height="wrap_content"
         android:id="@+id/listViewAnswers"
         android:layout_below="@+id/question"
-        android:layout_alignParentRight="true"
+        android:layout_alignParentRight="false"
         android:layout_alignParentEnd="true"
-        android:textSize="12sp"
-        android:padding="5dp"
-        android:layout_above="@+id/nextbutton" />
+        android:textSize="18sp"
+        android:padding="25dp"
+        android:layout_above="@+id/nextbutton"
+        android:layout_alignParentTop="false"
+        android:layout_alignParentBottom="false"
+        android:clickable="false" />
 
     <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="150dp"
+        android:layout_height="60dp"
         android:text="@string/next_quest_label"
         android:id="@+id/nextbutton"
         android:layout_alignParentBottom="true"
         android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true" />
+
+
+        />
 
     <ProgressBar
 
         style="@android:style/Widget.ProgressBar.Horizontal"
         android:layout_width="match_parent"
-        android:layout_height="40dp"
+        android:layout_height="60dp"
         android:id="@+id/AnswerProgress"
-        android:layout_alignBottom="@+id/nextbutton"
+        android:layout_alignParentBottom="true"
         android:layout_toLeftOf="@+id/nextbutton"
-        android:layout_toStartOf="@+id/nextbutton" />
+
+
+        />
 
 </RelativeLayout>

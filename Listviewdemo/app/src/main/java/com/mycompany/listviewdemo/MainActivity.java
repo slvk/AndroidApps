@@ -24,6 +24,7 @@ public class MainActivity extends ActionBarActivity {
 
         if (getIntent().getBooleanExtra("EXIT", false)) {
             finish();
+            System.exit(0);
         }
        // Log.v("MainActivity", "OnCreate event");
         openDB();
@@ -33,8 +34,8 @@ public class MainActivity extends ActionBarActivity {
 
         // for the moment data is inserted here
         //but it should be loaded by special loader
-        DataLoader.LoadData(myDb);
-        Log.v("MainActivity", "Rows inserted");
+
+        //Log.v("MainActivity", "Rows inserted");
         final Cursor cursor = myDb.getAllRowsSubjects();
 
         CustomCursorAdapter myAdapter = new CustomCursorAdapter(this, cursor);

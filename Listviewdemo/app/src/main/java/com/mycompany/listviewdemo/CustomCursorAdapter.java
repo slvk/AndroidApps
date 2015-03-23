@@ -6,6 +6,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CursorAdapter;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 /**
@@ -28,8 +29,15 @@ public class CustomCursorAdapter extends CursorAdapter {
         // Find fields to populate in inflated template
         TextView tvSerNo = (TextView) view.findViewById(R.id.serNo);
         TextView tvName = (TextView) view.findViewById(R.id.name);
+        ImageView ivImage = (ImageView) view.findViewById(R.id.icon);
+
         // Extract properties from cursor
         int SerNo = cursor.getInt(cursor.getColumnIndexOrThrow("_id"));
+        if (SerNo % 2 == 1)
+            ivImage.setImageResource(R.mipmap.ic_d_m);
+        else
+            ivImage.setImageResource(R.mipmap.ic_d_w);
+
         String name = cursor.getString(cursor.getColumnIndexOrThrow("name"));
         // Populate fields with extracted properties
         tvSerNo.setText(String.valueOf(SerNo));
