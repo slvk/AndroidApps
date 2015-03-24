@@ -9,8 +9,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -61,8 +61,6 @@ public class QuestionActivity extends ActionBarActivity {
 
         ListView AnswLV = (ListView) findViewById(R.id.listViewAnswers);
 
-
-
         AnswLV.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, final View view,
@@ -71,7 +69,9 @@ public class QuestionActivity extends ActionBarActivity {
                 if (!NextQuestButton.isEnabled()) {
                     NextQuestButton.setEnabled(true);
 
-                    TextView textViewAnsw = (TextView) view.findViewById(android.R.id.text1);
+                    LinearLayout rlUserAnswer = (LinearLayout)parent.getChildAt(position).findViewById(R.id.ans_row_layout);
+
+
                     int highlight_color;
                     if (quest.Correctness[position]) {
                         highlight_color = android.R.color.holo_green_light; // correct answer
@@ -80,13 +80,13 @@ public class QuestionActivity extends ActionBarActivity {
                     else {
                         highlight_color = android.R.color.holo_red_light; // incorrect answer
                         int CorrectAnswerPosition = quest.getCorrectAnswerPosition();
-
-                        TextView textViewCorrectAnsw = (TextView) parent.getChildAt(CorrectAnswerPosition).findViewById(android.R.id.text1);
-                        textViewCorrectAnsw.setBackgroundColor(getResources().getColor(android.R.color.holo_green_light));
+                        LinearLayout rlCorrectAnsw = (LinearLayout)parent.getChildAt(CorrectAnswerPosition).findViewById(R.id.ans_row_layout);
+                        //rlCorrectAnsw.setBackground(getDrawable(R.drawable.ans_selection_bg_correct));
+                        rlCorrectAnsw.setBackgroundColor(getResources().getColor(android.R.color.holo_green_light));
                     }
-                    textViewAnsw.setBackgroundColor(getResources().getColor(highlight_color));
-                    //todo
+                    rlUserAnswer.setBackgroundColor(getResources().getColor(highlight_color));
                     pbAnswerProgress.setProgress(QuestionsCount - QuestionList.size());
+
                 }
             }
 
@@ -121,14 +121,12 @@ public class QuestionActivity extends ActionBarActivity {
             builder.show();
             return true;
         }
-        else if (id ==R.id.action_exit){
+        else if (id == R.id.action_exit){
             Intent intent = new Intent(getApplicationContext(), MainActivity.class);
             intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
             intent.putExtra("EXIT", true);
             startActivity(intent);
         }
-
-
         return super.onOptionsItemSelected(item);
     }
     private void openDB() {
@@ -166,9 +164,14 @@ public class QuestionActivity extends ActionBarActivity {
             QuestTV.setText(quest.Question);
             Log.v(TAG, "quest.Answers.length = " + quest.Answers.length);
 
-            ArrayAdapter<String> AnswersLA =
+/*            ArrayAdapter<String> AnswersLA =
                 new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, quest.Answers);
-            AnswLV.setAdapter(AnswersLA);
+            AnswLV.setAdapter(AnswersLA);  */
+
+            AnswerListAdapter alAdapter = new AnswerListAdapter(this, quest.Answers);
+            AnswLV.setAdapter(alAdapter);
+
+
             //Log.v(TAG, "Adapter set correctly");
         }
     }
@@ -178,6 +181,9 @@ public class QuestionActivity extends ActionBarActivity {
         QuestionsCount = myDb.getCountQuestionsInSubject(SubjId);
         //todo
         pbAnswerProgress = (ProgressBar) findViewById(R.id.AnswerProgress);
+
+        //pbAnswerProgress.getProgressDrawable().applyTheme() ; setColorFilter(Color.BLUE, PorterDuff.Mode.ADD);
+        //pbAnswerProgress.getIndeterminateDrawable().setColorFilter(Color.BLUE, PorterDuff.Mode.ADD);
         pbAnswerProgress.setMax(QuestionsCount);
         Log.v(TAG, "QuestionsCount = "+QuestionsCount);
         QuestionList = new ArrayList<Integer>(QuestionsCount);

@@ -138,6 +138,20 @@ public class DatabaseAdapter {
         return QuestCount;
     }
 
+
+    public long insertSubject(String name){
+        return DatabaseHelper.insertSubject(db,name);
+    }
+
+    public long insertQuestion(String text, long subject_id, int serno){
+        return DatabaseHelper.insertQuestion(db, text, subject_id, serno);
+    }
+
+    public void insertAnswer(long question_id, String text, int is_correct){
+        DatabaseHelper.insertAnswer(db,question_id, text, is_correct);
+    }
+
+
     /////////////////////////////////////////////////////////////////////
     //	Private Helper Classes:
     /////////////////////////////////////////////////////////////////////

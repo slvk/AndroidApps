@@ -34,9 +34,7 @@
         android:id="@+id/nextbutton"
         android:layout_alignParentBottom="true"
         android:layout_alignParentRight="true"
-
-
-        />
+     />
 
     <ProgressBar
 
@@ -46,8 +44,8 @@
         android:id="@+id/AnswerProgress"
         android:layout_alignParentBottom="true"
         android:layout_toLeftOf="@+id/nextbutton"
-
-
-        />
+        android:progress="0"
+        android:progressDrawable="@drawable/progress_bar_custom"
+    />
 
 </RelativeLayout>
