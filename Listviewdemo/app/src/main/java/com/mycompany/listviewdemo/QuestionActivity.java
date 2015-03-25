@@ -9,6 +9,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -68,10 +69,7 @@ public class QuestionActivity extends ActionBarActivity {
                 Button NextQuestButton = (Button) findViewById(R.id.nextbutton);
                 if (!NextQuestButton.isEnabled()) {
                     NextQuestButton.setEnabled(true);
-
                     LinearLayout rlUserAnswer = (LinearLayout)parent.getChildAt(position).findViewById(R.id.ans_row_layout);
-
-
                     int highlight_color;
                     if (quest.Correctness[position]) {
                         highlight_color = android.R.color.holo_green_light; // correct answer
@@ -91,7 +89,6 @@ public class QuestionActivity extends ActionBarActivity {
             }
 
         });
-
     }
 
 
@@ -164,15 +161,9 @@ public class QuestionActivity extends ActionBarActivity {
             QuestTV.setText(quest.Question);
             Log.v(TAG, "quest.Answers.length = " + quest.Answers.length);
 
-/*            ArrayAdapter<String> AnswersLA =
-                new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, quest.Answers);
-            AnswLV.setAdapter(AnswersLA);  */
-
-            AnswerListAdapter alAdapter = new AnswerListAdapter(this, quest.Answers);
-            AnswLV.setAdapter(alAdapter);
-
-
-            //Log.v(TAG, "Adapter set correctly");
+            ArrayAdapter<String> AnswersLA =
+                new ArrayAdapter<String>(this, R.layout.answer_row_layout, R.id.text_answer,quest.Answers);
+            AnswLV.setAdapter(AnswersLA);
         }
     }
 
@@ -210,6 +201,22 @@ public class QuestionActivity extends ActionBarActivity {
             ++QuestSerno; // add 1 because in DB generation starts from 1
         }
         return QuestSerno;
+    }
+
+
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+/*        // TODO Auto-generated method stub
+        super.onSaveInstanceState(outState);
+        outState.putString("TEXT", (String)text.getText());  */
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+/*        // TODO Auto-generated method stub
+        super.onRestoreInstanceState(savedInstanceState);
+        text.setText(savedInstanceState.getString("TEXT"));*/
     }
 
 }
