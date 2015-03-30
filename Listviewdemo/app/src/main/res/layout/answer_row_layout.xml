@@ -7,17 +7,19 @@
     <!-- android:background="@drawable/ans_selection_bg" -->
 
     <ImageView android:id="@+id/icon_answer"
-        android:layout_width="25px"
-        android:layout_height="25px"
-        android:layout_marginLeft="4px"
+        android:layout_width="25dp"
+        android:layout_height="25dp"
+        android:layout_marginLeft="1dp"
 
         android:src="@mipmap/ic_next"
         android:layout_gravity="center_vertical" />
 
     <TextView android:id="@+id/text_answer" android:layout_width="match_parent"
         android:layout_height="wrap_content" android:text="Answer 1"
-        android:textSize="18sp"
-        android:padding="25dp"
-        android:layout_gravity="center_vertical" />
+        android:textSize="@dimen/quest_answ_text_size"
+        android:padding="@dimen/quest_answ_padding"
+        android:layout_gravity="center_vertical"
+
+        />
 
 </LinearLayout>

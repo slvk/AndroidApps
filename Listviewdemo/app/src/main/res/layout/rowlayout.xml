@@ -6,12 +6,12 @@
 
     <ImageView
         android:id="@+id/icon"
-        android:layout_width="100px"
-        android:layout_height="100px"
-        android:layout_marginLeft="4px"
-        android:layout_marginRight="10px"
-        android:layout_marginTop="20dp"
-        android:src="@mipmap/ic_d_m">
+        android:layout_width="35dp"
+        android:layout_height="35dp"
+        android:layout_marginLeft="2dp"
+        android:layout_marginRight="5dp"
+        android:src="@mipmap/ic_d_m"
+        android:layout_gravity="center_vertical">
     </ImageView>
 
     <TextView
@@ -29,8 +29,8 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:text="Subject name"
-        android:textSize="26sp"
-        android:padding="30dp">
+        android:textSize="@dimen/main_item_textsize"
+        android:padding="@dimen/main_item_padding">
     </TextView>
 
 </LinearLayout> 

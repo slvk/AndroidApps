@@ -34,6 +34,10 @@ public class QuestionActivity extends ActionBarActivity {
     private int CorrectAnswersCount = 0;
     private long StartTime;
     private ProgressBar pbAnswerProgress;
+
+    //------------------
+    ListView AnswLV;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -43,6 +47,10 @@ public class QuestionActivity extends ActionBarActivity {
         questions_subj = intent.getStringExtra("subj");
 
         questions_subj_id = intent.getIntExtra("subj_id", 0);
+
+       // TextView QuestTV = (TextView) findViewById(R.id.question);
+       // QuestTV.setMovementMethod(new ScrollingMovementMethod()); // needed to make question scrollable
+
         StartTime = System.nanoTime();
 
         getSupportActionBar().setTitle(questions_subj);
@@ -66,25 +74,29 @@ public class QuestionActivity extends ActionBarActivity {
             @Override
             public void onItemClick(AdapterView<?> parent, final View view,
                                     int position, long id) {
+                Log.v(TAG,"position = "+position);
+                // Header is the 0th element so correct answer is on 1 position below
                 Button NextQuestButton = (Button) findViewById(R.id.nextbutton);
+
                 if (!NextQuestButton.isEnabled()) {
+
                     NextQuestButton.setEnabled(true);
                     LinearLayout rlUserAnswer = (LinearLayout)parent.getChildAt(position).findViewById(R.id.ans_row_layout);
                     int highlight_color;
-                    if (quest.Correctness[position]) {
+
+                    if (quest.Correctness[position - 1]) {
                         highlight_color = android.R.color.holo_green_light; // correct answer
                         CorrectAnswersCount++;
+
                     }
                     else {
                         highlight_color = android.R.color.holo_red_light; // incorrect answer
                         int CorrectAnswerPosition = quest.getCorrectAnswerPosition();
-                        LinearLayout rlCorrectAnsw = (LinearLayout)parent.getChildAt(CorrectAnswerPosition).findViewById(R.id.ans_row_layout);
-                        //rlCorrectAnsw.setBackground(getDrawable(R.drawable.ans_selection_bg_correct));
+                        LinearLayout rlCorrectAnsw = (LinearLayout)parent.getChildAt(CorrectAnswerPosition + 1).findViewById(R.id.ans_row_layout);
                         rlCorrectAnsw.setBackgroundColor(getResources().getColor(android.R.color.holo_green_light));
                     }
                     rlUserAnswer.setBackgroundColor(getResources().getColor(highlight_color));
                     pbAnswerProgress.setProgress(QuestionsCount - QuestionList.size());
-
                 }
             }
 
@@ -142,8 +154,9 @@ public class QuestionActivity extends ActionBarActivity {
         if(QuestionList.size() == 1)
             NextQuestButton.setText(R.string.statistics_label);
         int NextQuestionSN = GetRandomQuestionNumber();
-        TextView QuestTV = (TextView) findViewById(R.id.question);
-        ListView AnswLV = (ListView) findViewById(R.id.listViewAnswers);
+       // TextView QuestTV = (TextView) findViewById(R.id.question);
+
+
         if (NextQuestionSN == END_LIST_INDICATOR) {
             Intent quest_activity_intent = new Intent(QuestionActivity.this, StatisticsActivity.class);
             quest_activity_intent.putExtra("subj", questions_subj);
@@ -158,9 +171,9 @@ public class QuestionActivity extends ActionBarActivity {
             Log.v(TAG, "NextQuestionSN = " + NextQuestionSN);
 
             quest = myDb.getQuestionBySN(subject_id, NextQuestionSN);
-            QuestTV.setText(quest.Question);
-            Log.v(TAG, "quest.Answers.length = " + quest.Answers.length);
-
+            TextView tvQuest = (TextView)findViewById(R.id.tv_quest_id);
+            //tvQuest.setMovementMethod(new ScrollingMovementMethod()); // needed to make question scrollable
+            tvQuest.setText(quest.Question);
             ArrayAdapter<String> AnswersLA =
                 new ArrayAdapter<String>(this, R.layout.answer_row_layout, R.id.text_answer,quest.Answers);
             AnswLV.setAdapter(AnswersLA);
@@ -170,13 +183,17 @@ public class QuestionActivity extends ActionBarActivity {
     private void InitQuestionsList(int SubjId){
         Log.v(TAG, "inside method SubjId = "+SubjId);
         QuestionsCount = myDb.getCountQuestionsInSubject(SubjId);
-        //todo
         pbAnswerProgress = (ProgressBar) findViewById(R.id.AnswerProgress);
-
-        //pbAnswerProgress.getProgressDrawable().applyTheme() ; setColorFilter(Color.BLUE, PorterDuff.Mode.ADD);
-        //pbAnswerProgress.getIndeterminateDrawable().setColorFilter(Color.BLUE, PorterDuff.Mode.ADD);
         pbAnswerProgress.setMax(QuestionsCount);
         Log.v(TAG, "QuestionsCount = "+QuestionsCount);
+        // init 1st place in the list for question
+        AnswLV = (ListView) findViewById(R.id.listViewAnswers);
+
+        //Header element for question created
+        View header = getLayoutInflater().inflate(R.layout.quest_item, null);
+        AnswLV.addHeaderView(header, null, false);
+
+
         QuestionList = new ArrayList<Integer>(QuestionsCount);
 
         for (int i = 0; i < QuestionsCount; i++){

@@ -4,7 +4,7 @@
     <string name="title_activity_question">Тести  &#34;Крок&#34;</string>
     <string name="title_activity_statistics">StatisticsActivity</string>
     <string name="minute_label">&#160;хв</string>
-    <string name= "statistics_label">Статисткика </string>
+    <string name= "statistics_label">Результат </string>
     <string name="next_quest_label">Далі</string>
     <string name="about_title">Про програму</string>
     <string name="version_word">Версія:&#160;</string>
