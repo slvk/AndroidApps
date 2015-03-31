@@ -14,4 +14,7 @@
     <dimen name="main_item_textsize">20sp</dimen>
 
     <dimen name="stat_textsize">18sp</dimen>
+
+    <dimen name="about_text_size">20sp</dimen>
+    <dimen name="about_top_margin">40dp</dimen>
 </resources>

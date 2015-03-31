@@ -40,7 +40,7 @@ public class DatabaseAdapter {
     public static final String TAB_QUESTIONS = "Questions";
     public static final String TAB_ANSWERS = "Answers";
 
-    public static final int DATABASE_VERSION = 12;
+    public static final int DATABASE_VERSION = 14;
 
     private static final String CREATE_SUBJS_SQL =
             String.format("create table %s (%s integer  primary key autoincrement, %s text not null);", TAB_SUBJS, SUBJ_ID, SUBJ_NAME);

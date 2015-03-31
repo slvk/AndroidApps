@@ -68,8 +68,6 @@ public class QuestionActivity extends ActionBarActivity {
             }
         });
 
-        ListView AnswLV = (ListView) findViewById(R.id.listViewAnswers);
-
         AnswLV.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, final View view,
@@ -91,9 +89,29 @@ public class QuestionActivity extends ActionBarActivity {
                     }
                     else {
                         highlight_color = android.R.color.holo_red_light; // incorrect answer
-                        int CorrectAnswerPosition = quest.getCorrectAnswerPosition();
-                        LinearLayout rlCorrectAnsw = (LinearLayout)parent.getChildAt(CorrectAnswerPosition + 1).findViewById(R.id.ans_row_layout);
-                        rlCorrectAnsw.setBackgroundColor(getResources().getColor(android.R.color.holo_green_light));
+                        final int CorrectAnswerPosition = quest.getCorrectAnswerPosition();
+                        //Log.v(TAG, "AnswLV.getFirstVisiblePosition() = "+AnswLV.getFirstVisiblePosition());
+                        //Log.v(TAG, "AnswLV.getLastVisiblePosition() = "+AnswLV.getLastVisiblePosition());
+                        //Log.v(TAG, "CorrectAnswerPosition + 1 = "+ (CorrectAnswerPosition + 1));
+                        if ((AnswLV.getFirstVisiblePosition() <= (CorrectAnswerPosition + 1)) && // answer is visible on the screen
+                                ((CorrectAnswerPosition + 1)) <= AnswLV.getLastVisiblePosition()) {
+                            LinearLayout rlCorrectAnsw = (LinearLayout) parent.getChildAt(CorrectAnswerPosition + 1).findViewById(R.id.ans_row_layout);
+                            rlCorrectAnsw.setBackgroundColor(getResources().getColor(android.R.color.holo_green_light));
+                        }else{// answer is invisible. Position to correct answer, run highlight action in separate thread
+                            AnswLV.setSelection(CorrectAnswerPosition + 1);
+                            final AdapterView<?> LocalParent = parent;
+
+                            AnswLV.postDelayed(new Runnable() {
+                                @Override
+                                public void run() {
+
+                                    LinearLayout rlCorrectAnsw = (LinearLayout) LocalParent.getChildAt(CorrectAnswerPosition + 1).findViewById(R.id.ans_row_layout);
+                                    rlCorrectAnsw.setBackgroundColor(getResources().getColor(android.R.color.holo_green_light));
+                                }
+                            }, 200);
+
+                        }
+
                     }
                     rlUserAnswer.setBackgroundColor(getResources().getColor(highlight_color));
                     pbAnswerProgress.setProgress(QuestionsCount - QuestionList.size());
