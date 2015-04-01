@@ -40,7 +40,7 @@ public class DatabaseAdapter {
     public static final String TAB_QUESTIONS = "Questions";
     public static final String TAB_ANSWERS = "Answers";
 
-    public static final int DATABASE_VERSION = 14;
+    public static final int DATABASE_VERSION = 17;
 
     private static final String CREATE_SUBJS_SQL =
             String.format("create table %s (%s integer  primary key autoincrement, %s text not null);", TAB_SUBJS, SUBJ_ID, SUBJ_NAME);
@@ -213,11 +213,13 @@ public class DatabaseAdapter {
         }
 
         public static void insertAnswer(SQLiteDatabase _db,long question_id, String text, int is_correct){
-            ContentValues initialValues = new ContentValues();
-            initialValues.put(ANSW_QUEST_ID, question_id);
-            initialValues.put(ANSW_TEXT, text);
-            initialValues.put(ANSW_IS_CORRECT, is_correct);
-            _db.insert(TAB_ANSWERS, null, initialValues);
+            if (!text.equals("-") && !text.equals("")) {
+                ContentValues initialValues = new ContentValues();
+                initialValues.put(ANSW_QUEST_ID, question_id);
+                initialValues.put(ANSW_TEXT, text);
+                initialValues.put(ANSW_IS_CORRECT, is_correct);
+                _db.insert(TAB_ANSWERS, null, initialValues);
+            }
         }
 
 

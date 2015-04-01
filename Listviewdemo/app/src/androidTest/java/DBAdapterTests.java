@@ -63,6 +63,8 @@ public class DBAdapterTests  extends AndroidTestCase {
         mMyAdapter.insertAnswer(QuestId, "test answer3", 0);
         mMyAdapter.insertAnswer(QuestId, "test answer4", 0);
         mMyAdapter.insertAnswer(QuestId, "test answer5", 0);
+        mMyAdapter.insertAnswer(QuestId, "", 0); // should not be inserted
+        mMyAdapter.insertAnswer(QuestId, "-", 0);// should not be inserted
 
         mMyAdapter.insertQuestion("test question1", SubjId, 2);
         mMyAdapter.insertQuestion("test question2", SubjId, 3);
