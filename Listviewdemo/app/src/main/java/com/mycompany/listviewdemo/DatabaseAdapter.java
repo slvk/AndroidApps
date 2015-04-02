@@ -40,7 +40,7 @@ public class DatabaseAdapter {
     public static final String TAB_QUESTIONS = "Questions";
     public static final String TAB_ANSWERS = "Answers";
 
-    public static final int DATABASE_VERSION = 17;
+    public static final int DATABASE_VERSION = 22;
 
     private static final String CREATE_SUBJS_SQL =
             String.format("create table %s (%s integer  primary key autoincrement, %s text not null);", TAB_SUBJS, SUBJ_ID, SUBJ_NAME);
@@ -177,6 +177,7 @@ public class DatabaseAdapter {
             Log.v(TAG, "OnCreate helper finished");
 
             DataLoader.LoadData(_db);
+            DataLoader.LoadData1(_db);
         }
 
         @Override
