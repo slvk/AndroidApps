@@ -5,14 +5,20 @@
 
 package com.mycompany.listviewdemo;
 
-        import android.content.ContentValues;
-        import android.content.Context;
-        import android.database.Cursor;
-        import android.database.sqlite.SQLiteDatabase;
-        import android.database.sqlite.SQLiteOpenHelper;
-        import android.util.Log;
+import android.content.Context;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteException;
+import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
 
-public class DatabaseAdapter {
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.sql.SQLException;
+
+public class DatabaseAdapter  extends SQLiteOpenHelper{
     private static final String TAG = "DBAdapter";
 
     // Subjects Fields
@@ -32,29 +38,21 @@ public class DatabaseAdapter {
     // TODO: Setup your field numbers here (0 = KEY_ROWID, 1=...)
 
     public static final String[] SUBJ_COLUMNS = new String[] {SUBJ_ID, SUBJ_NAME};
-    //public static final String[] QUEST_COLUMNS = new String[] {QUEST_ID, QUEST_TEXT, QUEST_SUBJ_ID,QUEST_SERNO};
-    //public static final String[] ANSW_COLUMNS = new String[] {ANSW_ID, ANSW_TEXT, ANSW_QUEST_ID, ANSW_IS_CORRECT};
 
     public static final String DATABASE_NAME = "MyDb";
+    public static final String DATABASE_PATH = "/data/data/com.mycompany.listviewdemo/databases/";// todo: replace with automatic filling from code
+
     public static final String TAB_SUBJS = "Subjects";
     public static final String TAB_QUESTIONS = "Questions";
     public static final String TAB_ANSWERS = "Answers";
 
-    public static final int DATABASE_VERSION = 29;
+   //public static final int DATABASE_VERSION = 31;
 
-    private static final String CREATE_SUBJS_SQL =
-            String.format("create table %s (%s integer  primary key autoincrement, %s text not null);", TAB_SUBJS, SUBJ_ID, SUBJ_NAME);
-    private static final String CREATE_QUESTS_SQL =
-            String.format("create table %s (%s integer primary key autoincrement, %s text not null, %s int not null, %s int not null, UNIQUE (%s, %s) ON CONFLICT REPLACE, FOREIGN KEY(%s) REFERENCES %s(%s));",
-                    TAB_QUESTIONS, QUEST_ID, QUEST_TEXT, QUEST_SUBJ_ID, QUEST_SERNO,QUEST_SUBJ_ID, QUEST_SERNO,QUEST_SUBJ_ID, TAB_SUBJS, SUBJ_ID);
-    private static final String CREATE_ANSWERS_SQL =
-            String.format("create table %s(%s integer primary key autoincrement, %s int not null,%s text not null, %s int not null, FOREIGN KEY(%s) REFERENCES %s(%s));",
-                    TAB_ANSWERS, ANSW_ID, ANSW_TEXT, ANSW_QUEST_ID, ANSW_IS_CORRECT, ANSW_QUEST_ID,TAB_QUESTIONS,QUEST_ID);
     private static final String get_quest_query = String.format("select %s,%s from %s where %s = ? and %s = ?", QUEST_TEXT, QUEST_ID,TAB_QUESTIONS, QUEST_SUBJ_ID, QUEST_SERNO);
     private static final String get_answers_query = String.format("select %s, %s from %s where %s = ?", ANSW_TEXT,ANSW_IS_CORRECT, TAB_ANSWERS, ANSW_QUEST_ID);
     private static final String get_count_quests_query = String.format("select count(*) from %s where %s = ?", TAB_QUESTIONS, QUEST_SUBJ_ID);
     private final Context context;
-    private DatabaseHelper myDBHelper;
+
     private SQLiteDatabase db;
 
     /////////////////////////////////////////////////////////////////////
@@ -62,25 +60,17 @@ public class DatabaseAdapter {
     /////////////////////////////////////////////////////////////////////
 
     public DatabaseAdapter(Context ctx) {
+        super(ctx, DATABASE_NAME, null, 1);
         this.context = ctx;
-        myDBHelper = new DatabaseHelper(context);
     }
 
     // Open the database connection.
-    public DatabaseAdapter open() {
-        db = myDBHelper.getWritableDatabase();
-        //db = myDBHelper.getReadableDatabase();
-        String name = myDBHelper.getDatabaseName();
-        Log.v(TAG, "getWritableDatabase() "+name);
+/*    public DatabaseAdapter open() {
+        db = myDBHelper.getReadableDatabase();
+        //Log.v(TAG, "getWritableDatabase() " + myDBHelper.getDatabaseName());
         return this;
     }
-
-    // Close the database connection.
-    public void close() {
-        myDBHelper.close();
-        Log.v(TAG, "myDBHelper.close()");
-    }
-
+*/
     public Cursor getAllRowsSubjects() {
         String where = null;
         Cursor c = 	db.query(true, TAB_SUBJS, SUBJ_COLUMNS,
@@ -90,6 +80,112 @@ public class DatabaseAdapter {
         }
         return c;
     }
+    //----------------------------------------------------------------------------------------------
+    //Alternative create database
+    /**
+     * Creates a empty database on the system and rewrites it with your own database.
+     * */
+    public void createDataBase() throws IOException {
+
+        if(checkDataBase()){
+            //do nothing - database already exist
+        }else{
+
+            //By calling this method and empty database will be created into the default system path
+            //of your application so we are gonna be able to overwrite that database with our database.
+           this.getReadableDatabase();
+
+            try {
+
+                copyDataBase();
+
+            } catch (IOException e) {
+                Log.v(TAG, "File not copied");
+                throw new Error("Error copying database");
+            }
+        }
+
+    }
+
+    /**
+     * Check if the database already exist to avoid re-copying the file each time you open the application.
+     * @return true if it exists, false if it doesn't
+     */
+    private boolean checkDataBase(){
+
+        SQLiteDatabase checkDB = null;
+
+        try{
+            String myPath = DATABASE_PATH + DATABASE_NAME;
+            checkDB = SQLiteDatabase.openDatabase(myPath, null, SQLiteDatabase.OPEN_READONLY);
+
+        }catch(SQLiteException e){
+            Log.v(TAG, "DB so far does not exist");
+        }
+
+        if(checkDB != null){
+
+            Log.v(TAG, "DB exists. closing");
+            checkDB.close();
+        }
+
+        return checkDB != null;
+    }
+
+    private void copyDataBase() throws IOException{
+
+        //Open your local db as the input stream
+        InputStream myInput = context.getAssets().open(DATABASE_NAME);
+
+        // Path to the just created empty db
+        String outFileName = DATABASE_PATH + DATABASE_NAME;
+
+        //Open the empty db as the output stream
+        OutputStream myOutput = new FileOutputStream(outFileName);
+
+        //transfer bytes from the inputfile to the outputfile
+        byte[] buffer = new byte[1024];
+        int length;
+        while ((length = myInput.read(buffer))>0){
+            myOutput.write(buffer, 0, length);
+        }
+
+        //Close the streams
+        myOutput.flush();
+        myOutput.close();
+        myInput.close();
+
+    }
+
+    public void openDataBase() throws SQLException {
+
+        //Open the database
+        String myPath = DATABASE_PATH + DATABASE_NAME;
+        db = SQLiteDatabase.openDatabase(myPath, null, SQLiteDatabase.OPEN_READONLY);
+
+    }
+
+    @Override
+    public synchronized void close() {
+
+        if(db != null)
+            db.close();
+
+        super.close();
+
+    }
+
+    @Override
+    public void onCreate(SQLiteDatabase _db) {
+
+    }
+
+    @Override
+    public void onUpgrade(SQLiteDatabase _db, int oldVersion, int newVersion) {
+
+    }
+
+    //----------------------------------------------------------------------------------------------
     public QuestionWithAnswer getQuestionBySN(int subject_id, int serno){
 
         Cursor q_cursor;
@@ -138,94 +234,4 @@ public class DatabaseAdapter {
         return QuestCount;
     }
 
-
-    public long insertSubject(String name){
-        return DatabaseHelper.insertSubject(db,name);
-    }
-
-    public long insertQuestion(String text, long subject_id, int serno){
-        return DatabaseHelper.insertQuestion(db, text, subject_id, serno);
-    }
-
-    public void insertAnswer(long question_id, String text, int is_correct){
-        DatabaseHelper.insertAnswer(db,question_id, text, is_correct);
-    }
-
-
-    /////////////////////////////////////////////////////////////////////
-    //	Private Helper Classes:
-    /////////////////////////////////////////////////////////////////////
-
-    /**
-     * Private class which handles database creation and upgrading.
-     * Used to handle low-level database access.
-     */
-   /* private */public static class DatabaseHelper extends SQLiteOpenHelper
-    {
-        DatabaseHelper(Context context) {
-            super(context, DATABASE_NAME, null, DATABASE_VERSION);
-        }
-
-        @Override
-        public void onCreate(SQLiteDatabase _db) {
-            Log.v(TAG, "OnCreate helper");
-            _db.execSQL(CREATE_SUBJS_SQL);
-            Log.v(TAG, "subjs created");
-            _db.execSQL(CREATE_QUESTS_SQL);
-            Log.v(TAG, "quests created");
-            _db.execSQL(CREATE_ANSWERS_SQL);
-            Log.v(TAG, "OnCreate helper finished");
-
-            DataLoader.LoadData(_db);
-            DataLoader.LoadData1(_db);
-            DataLoader.LoadData2(_db);
-            DataLoader.LoadData3(_db);
-            DataLoader.LoadData4(_db);
-        }
-
-        @Override
-        public void onUpgrade(SQLiteDatabase _db, int oldVersion, int newVersion) {
-            Log.w(TAG, "Upgrading application's database from version " + oldVersion
-                    + " to " + newVersion + ", which will destroy all old data!");
-
-            // Destroy old database:
-            _db.execSQL("DROP TABLE IF EXISTS " + TAB_SUBJS);
-            _db.execSQL("DROP TABLE IF EXISTS " + TAB_QUESTIONS);
-            _db.execSQL("DROP TABLE IF EXISTS " + TAB_ANSWERS);
-            // Recreate new database:
-            onCreate(_db);
-        }
-
-        public static void deleteAllData(SQLiteDatabase _db){
-            _db.delete(TAB_ANSWERS, null, null);
-            _db.delete(TAB_QUESTIONS, null, null);
-            _db.delete(TAB_SUBJS, null, null);
-        }
-        public static long insertSubject(SQLiteDatabase _db, String name) {
-            ContentValues initialValues = new ContentValues();
-            initialValues.put(SUBJ_NAME, name);
-            // Insert it into the database.
-            return _db.insert(TAB_SUBJS, null, initialValues);
-        }
-
-        public static long insertQuestion(SQLiteDatabase _db,String text, long subject_id, int serno) {
-            ContentValues initialValues = new ContentValues();
-            initialValues.put(QUEST_TEXT, text);
-            initialValues.put(QUEST_SUBJ_ID, subject_id);
-            initialValues.put(QUEST_SERNO, serno);
-            return _db.insert(TAB_QUESTIONS, null, initialValues);
-        }
-
-        public static void insertAnswer(SQLiteDatabase _db,long question_id, String text, int is_correct){
-            if (!text.equals("-") && !text.equals("")) {
-                ContentValues initialValues = new ContentValues();
-                initialValues.put(ANSW_QUEST_ID, question_id);
-                initialValues.put(ANSW_TEXT, text);
-                initialValues.put(ANSW_IS_CORRECT, is_correct);
-                _db.insert(TAB_ANSWERS, null, initialValues);
-            }
-        }
-
-
-    }
 }

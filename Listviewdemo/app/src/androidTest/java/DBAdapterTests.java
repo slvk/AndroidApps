@@ -3,7 +3,6 @@ import android.test.AndroidTestCase;
 import android.test.RenamingDelegatingContext;
 
 import com.mycompany.listviewdemo.DatabaseAdapter;
-import com.mycompany.listviewdemo.QuestionWithAnswer;
 
 /**
  * Created by VIanoshchuk on 17.03.2015.
@@ -22,7 +21,7 @@ public class DBAdapterTests  extends AndroidTestCase {
                 = new RenamingDelegatingContext(getContext(), TEST_FILE_PREFIX);
 
         mMyAdapter = new DatabaseAdapter(context);
-        mMyAdapter.open();
+        //mMyAdapter.open();
 
     }
 
@@ -48,7 +47,7 @@ public class DBAdapterTests  extends AndroidTestCase {
         int count_before = c.getCount();
         c.close();
 
-        SubjId = mMyAdapter.insertSubject("test subject1");
+/*        SubjId = mMyAdapter.insertSubject("test subject1");
 
         c = mMyAdapter.getAllRowsSubjects();
         assertEquals(count_before + 1, c.getCount()); // check that "test subject1" was inserted
@@ -79,7 +78,7 @@ public class DBAdapterTests  extends AndroidTestCase {
         int CorrectAnswerPosition = qa.getCorrectAnswerPosition();
         assertTrue(0 <= CorrectAnswerPosition && CorrectAnswerPosition <= 4);
         assertEquals("test answer2", qa.Answers[CorrectAnswerPosition]);
-
+*/
 
     }
 

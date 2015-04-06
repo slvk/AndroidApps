@@ -13,9 +13,13 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import java.io.IOException;
+import java.sql.SQLException;
+
 public class MainActivity extends ActionBarActivity {
 
     DatabaseAdapter myDb;
+    private static final String TAG = "MainActivity";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,8 +69,22 @@ public class MainActivity extends ActionBarActivity {
 
     private void openDB() {
         myDb = new DatabaseAdapter(this);
-        myDb.open();
-        Log.v("MainActivity", "DB opened");
+
+        try {
+            myDb.createDataBase();
+            Log.v(TAG, "DB created OK");
+        } catch (IOException ioe) {
+            Log.v(TAG, "Unable to create database");
+            throw new Error("Unable to create database");
+        }
+
+        try {
+            myDb.openDataBase();
+            Log.v(TAG, "DB opened OK");
+        }catch(SQLException sqle){
+            Log.v(TAG, "Unable to open database");
+            throw new Error("Unable to open database");
+        }
     }
 
     private void closeDB() {

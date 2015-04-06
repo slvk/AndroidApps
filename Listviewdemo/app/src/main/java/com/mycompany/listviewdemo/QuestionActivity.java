@@ -16,6 +16,8 @@ import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import java.io.IOException;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -158,7 +160,19 @@ public class QuestionActivity extends ActionBarActivity {
     }
     private void openDB() {
         myDb = new DatabaseAdapter(this);
-        myDb.open();
+
+        try {
+            myDb.createDataBase();
+
+        } catch (IOException ioe) {
+            throw new Error("Unable to create database");
+        }
+
+        try {
+            myDb.openDataBase();
+        }catch(SQLException sqle){
+            throw new Error("Unable to open database");
+        }
         Log.v(TAG, "DB opened");
     }
 
@@ -190,7 +204,6 @@ public class QuestionActivity extends ActionBarActivity {
 
             quest = myDb.getQuestionBySN(subject_id, NextQuestionSN);
             TextView tvQuest = (TextView)findViewById(R.id.tv_quest_id);
-            //tvQuest.setMovementMethod(new ScrollingMovementMethod()); // needed to make question scrollable
             tvQuest.setText(quest.Question);
             ArrayAdapter<String> AnswersLA =
                 new ArrayAdapter<String>(this, R.layout.answer_row_layout, R.id.text_answer,quest.Answers);
