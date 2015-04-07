@@ -34,6 +34,7 @@ public class QuestionActivity extends ActionBarActivity {
     private String questions_subj;
     private int QuestionsCount;
     private int CorrectAnswersCount = 0;
+    private int NextQuestionSN;
     private long StartTime;
     private ProgressBar pbAnswerProgress;
 
@@ -50,8 +51,6 @@ public class QuestionActivity extends ActionBarActivity {
 
         questions_subj_id = intent.getIntExtra("subj_id", 0);
 
-       // TextView QuestTV = (TextView) findViewById(R.id.question);
-       // QuestTV.setMovementMethod(new ScrollingMovementMethod()); // needed to make question scrollable
 
         StartTime = System.nanoTime();
 
@@ -59,14 +58,29 @@ public class QuestionActivity extends ActionBarActivity {
         openDB();
 
         //Log.v(TAG, "Before init");
-        InitQuestionsList(questions_subj_id);
+        boolean RestoredFlag = false;
+        if (savedInstanceState != null){
+            Log.v(TAG,"savedInstanceState is not empty:");
+            QuestionsCount = savedInstanceState.getInt("QuestionsCount", 0);
+            //Log.v(TAG,"QuestionsCount = " + QuestionsCount);
+            CorrectAnswersCount = savedInstanceState.getInt("CorrectAnswersCount", 0);
+            //Log.v(TAG,"CorrectAnswersCount = " + CorrectAnswersCount);
+            StartTime = savedInstanceState.getLong("StartTime", 0);
+            //Log.v(TAG,"StartTime = " + StartTime);
+            QuestionList = savedInstanceState.getIntegerArrayList("QuestionList");
+            //Log.v(TAG,"QuestionList.count = " + QuestionList.size());
+            NextQuestionSN = savedInstanceState.getInt("NextQuestionSN", 0);
+           // Log.v(TAG,"NextQuestionSN = " + NextQuestionSN);
+            RestoredFlag = true;
+            //todo: replace with my own ...
+        }
 
-        displayNextQuestion(questions_subj_id);
-
+        InitQuestionsList(questions_subj_id, RestoredFlag);
+        displayNextQuestion(questions_subj_id, RestoredFlag);
         final Button button = (Button) findViewById(R.id.nextbutton);
         button.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                displayNextQuestion(questions_subj_id);
+                displayNextQuestion(questions_subj_id, false);
             }
         });
 
@@ -121,9 +135,43 @@ public class QuestionActivity extends ActionBarActivity {
             }
 
         });
+        Log.d(TAG, "onCreate");
+
     }
 
+    @Override
+    public void onStart() {
+        super.onStart();
+        Log.d(TAG, "onStart");
+    }
 
+    @Override
+       public void onResume() {
+            super.onResume();
+            Log.d(TAG,"onResume");
+        }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        Log.d(TAG, "onPause");
+    }
+
+    public void onStop() {
+        super.onStop();
+        Log.d(TAG,"onStop");
+    }
+
+    public void onDestroy() {
+        super.onDestroy();
+        Log.d(TAG,"onDestroy");
+    }
+
+    public void onRestart()
+    {
+        super.onRestart();
+        Log.d(TAG,"onRestart");
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -180,12 +228,14 @@ public class QuestionActivity extends ActionBarActivity {
         myDb.close();
     }
 
-    private void displayNextQuestion(int subject_id){
+    private void displayNextQuestion(int subject_id, boolean RestoredFlag){
         Button NextQuestButton = (Button) findViewById(R.id.nextbutton);
         NextQuestButton.setEnabled(false);
         if(QuestionList.size() == 1)
             NextQuestButton.setText(R.string.statistics_label);
-        int NextQuestionSN = GetRandomQuestionNumber();
+        if (!RestoredFlag) {
+            NextQuestionSN = GetRandomQuestionNumber();
+        }// else already inited
        // TextView QuestTV = (TextView) findViewById(R.id.question);
 
 
@@ -211,11 +261,15 @@ public class QuestionActivity extends ActionBarActivity {
         }
     }
 
-    private void InitQuestionsList(int SubjId){
+    private void InitQuestionsList(int SubjId, boolean RestoredFlag){
         Log.v(TAG, "inside method SubjId = "+SubjId);
         QuestionsCount = myDb.getCountQuestionsInSubject(SubjId);
         pbAnswerProgress = (ProgressBar) findViewById(R.id.AnswerProgress);
         pbAnswerProgress.setMax(QuestionsCount);
+
+        if(RestoredFlag) {
+            pbAnswerProgress.setProgress(QuestionsCount - QuestionList.size());
+        }
         Log.v(TAG, "QuestionsCount = "+QuestionsCount);
         // init 1st place in the list for question
         AnswLV = (ListView) findViewById(R.id.listViewAnswers);
@@ -224,12 +278,13 @@ public class QuestionActivity extends ActionBarActivity {
         View header = getLayoutInflater().inflate(R.layout.quest_item, null);
         AnswLV.addHeaderView(header, null, false);
 
+        if (!RestoredFlag) {
+            QuestionList = new ArrayList<Integer>(QuestionsCount);
 
-        QuestionList = new ArrayList<Integer>(QuestionsCount);
-
-        for (int i = 0; i < QuestionsCount; i++){
-            QuestionList.add(i, i);
-        }
+            for (int i = 0; i < QuestionsCount; i++) {
+                QuestionList.add(i, i);
+            }
+        }// else already inited
 
     }
 
@@ -255,14 +310,20 @@ public class QuestionActivity extends ActionBarActivity {
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
-/*        // TODO Auto-generated method stub
         super.onSaveInstanceState(outState);
-        outState.putString("TEXT", (String)text.getText());  */
+        Log.d(TAG,"onSaveInstanceState");
+
+        outState.putInt("QuestionsCount", QuestionsCount);
+        outState.putInt("CorrectAnswersCount", CorrectAnswersCount);
+        outState.putLong("StartTime", StartTime);
+        outState.putIntegerArrayList("QuestionList", QuestionList);
+        outState.putInt("NextQuestionSN", NextQuestionSN);
     }
 
     @Override
     protected void onRestoreInstanceState(Bundle savedInstanceState) {
-/*        // TODO Auto-generated method stub
+        Log.d(TAG,"onRestoreInstanceState");
+/*
         super.onRestoreInstanceState(savedInstanceState);
         text.setText(savedInstanceState.getString("TEXT"));*/
     }
