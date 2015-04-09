@@ -31,6 +31,7 @@ public class QuestionActivity extends ActionBarActivity {
     Random QuestNumberGenerator = new Random();
     int questions_subj_id;
     private QuestionWithAnswer quest;
+    private String selected_user_answer;
     private String questions_subj;
     private int QuestionsCount;
     private int CorrectAnswersCount = 0;
@@ -72,7 +73,6 @@ public class QuestionActivity extends ActionBarActivity {
             NextQuestionSN = savedInstanceState.getInt("NextQuestionSN", 0);
            // Log.v(TAG,"NextQuestionSN = " + NextQuestionSN);
             RestoredFlag = true;
-            //todo: replace with my own ...
         }
 
         InitQuestionsList(questions_subj_id, RestoredFlag);
@@ -96,12 +96,13 @@ public class QuestionActivity extends ActionBarActivity {
 
                     NextQuestButton.setEnabled(true);
                     LinearLayout rlUserAnswer = (LinearLayout)parent.getChildAt(position).findViewById(R.id.ans_row_layout);
+                    selected_user_answer = quest.Answers[position - 1]; // need to save answer for OnRestore case
                     int highlight_color;
 
                     if (quest.Correctness[position - 1]) {
                         highlight_color = android.R.color.holo_green_light; // correct answer
                         CorrectAnswersCount++;
-
+                        selected_user_answer = null;
                     }
                     else {
                         highlight_color = android.R.color.holo_red_light; // incorrect answer
@@ -160,6 +161,11 @@ public class QuestionActivity extends ActionBarActivity {
     public void onStop() {
         super.onStop();
         Log.d(TAG,"onStop");
+
+        if (myDb != null) {
+            closeDB();
+            Log.d(TAG,"DB closed");
+        }
     }
 
     public void onDestroy() {
@@ -171,6 +177,10 @@ public class QuestionActivity extends ActionBarActivity {
     {
         super.onRestart();
         Log.d(TAG,"onRestart");
+        if (myDb == null) {
+            openDB();
+            Log.d(TAG,"DB opened");
+        }
     }
 
     @Override
@@ -284,7 +294,7 @@ public class QuestionActivity extends ActionBarActivity {
             for (int i = 0; i < QuestionsCount; i++) {
                 QuestionList.add(i, i);
             }
-        }// else already inited
+        }// else QuestionList already inited
 
     }
 
@@ -318,14 +328,67 @@ public class QuestionActivity extends ActionBarActivity {
         outState.putLong("StartTime", StartTime);
         outState.putIntegerArrayList("QuestionList", QuestionList);
         outState.putInt("NextQuestionSN", NextQuestionSN);
+        Button NextQuestButton = (Button) findViewById(R.id.nextbutton);
+        outState.putBoolean("AlreadyAnswered", NextQuestButton.isEnabled());
+        outState.putString("selected_user_answer", selected_user_answer);
     }
 
     @Override
     protected void onRestoreInstanceState(Bundle savedInstanceState) {
-        Log.d(TAG,"onRestoreInstanceState");
-/*
         super.onRestoreInstanceState(savedInstanceState);
-        text.setText(savedInstanceState.getString("TEXT"));*/
+        Log.d(TAG,"onRestoreInstanceState");
+        boolean AlreadyAnswered = savedInstanceState.getBoolean("AlreadyAnswered", false);
+        Button NextQuestButton = (Button) findViewById(R.id.nextbutton);
+        //if answered then button is enabled to move to the next question;
+        if (AlreadyAnswered) {
+            NextQuestButton.setEnabled(true);
+            final int CorrectAnswerPosition = quest.getCorrectAnswerPosition();
+            if ((AnswLV.getFirstVisiblePosition() <= (CorrectAnswerPosition + 1)) && // answer is visible on the screen
+                    ((CorrectAnswerPosition + 1)) <= AnswLV.getLastVisiblePosition()) {
+                LinearLayout rlCorrectAnsw = (LinearLayout) AnswLV.getChildAt(CorrectAnswerPosition + 1).findViewById(R.id.ans_row_layout);
+                rlCorrectAnsw.setBackgroundColor(getResources().getColor(android.R.color.holo_green_light));
+            } else{// answer is invisible. Position to correct answer, run highlight action in separate thread
+                AnswLV.setSelection(CorrectAnswerPosition + 1);
+                AnswLV.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        LinearLayout rlCorrectAnsw = (LinearLayout) AnswLV.getChildAt(CorrectAnswerPosition + 1).findViewById(R.id.ans_row_layout);
+                        rlCorrectAnsw.setBackgroundColor(getResources().getColor(android.R.color.holo_green_light));
+                    }
+                }, 200);
+            }
+
+            // selected_user_answer is not null only if answer was wrong
+            selected_user_answer = savedInstanceState.getString("selected_user_answer",null);
+            if (selected_user_answer != null && !selected_user_answer.isEmpty()){
+                final int UserAnswPosition = quest.getIndexOfAnswer(selected_user_answer);
+                // highlight position + 1
+                if ((AnswLV.getFirstVisiblePosition() <= (UserAnswPosition + 1)) && // answer is visible on the screen
+                        ((UserAnswPosition + 1)) <= AnswLV.getLastVisiblePosition()) {
+                    LinearLayout rlCorrectAnsw = (LinearLayout) AnswLV.getChildAt(UserAnswPosition + 1).findViewById(R.id.ans_row_layout);
+                    rlCorrectAnsw.setBackgroundColor(getResources().getColor(android.R.color.holo_red_light));
+                } else{// answer is invisible. Position to correct answer, run highlight action in separate thread
+                    AnswLV.postDelayed(new Runnable() {
+                                           @Override
+                                           public void run() {
+                                               AnswLV.setSelection(UserAnswPosition + 1);
+                                           }
+                                       }, 300);
+
+                    AnswLV.postDelayed(new
+
+                    Runnable() {
+                        @Override
+                        public void run () {
+                            LinearLayout rlCorrectAnsw = (LinearLayout) AnswLV.getChildAt(UserAnswPosition + 1).findViewById(R.id.ans_row_layout);
+                            rlCorrectAnsw.setBackgroundColor(getResources().getColor(android.R.color.holo_red_light));
+                        }
+                    }
+                    ,400);
+                    }
+                }
+
+        }
     }
 
 }

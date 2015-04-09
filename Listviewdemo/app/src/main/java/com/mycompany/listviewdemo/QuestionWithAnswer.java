@@ -1,5 +1,6 @@
 package com.mycompany.listviewdemo;
 
+import java.util.Arrays;
 import java.util.Random;
 
 /**
@@ -39,5 +40,8 @@ public class QuestionWithAnswer {
                 return i;
         //todo replace with exception that question has no correct answer
         return -1;
+    }
+    public int getIndexOfAnswer(String Answer){
+        return Arrays.asList(Answers).indexOf(Answer);
     }
 }
